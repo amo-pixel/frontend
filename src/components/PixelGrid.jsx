@@ -1,43 +1,66 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function PixelGrid() {
-  const totalPixels = 100; // you can change to 1,000,000 later
+  const gridSize = 20; // 20x20 grid
+  const totalPixels = gridSize * gridSize;
+
   const [ownedPixels, setOwnedPixels] = useState([]);
 
-  // ✅ Load saved pixels when page first loads
+  // Load owned pixels from localStorage on page load
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("ownedPixels")) || [];
-    setOwnedPixels(saved);
+    const savedPixels = JSON.parse(localStorage.getItem("ownedPixels")) || [];
+    setOwnedPixels(savedPixels);
   }, []);
 
-  // ✅ Save pixels whenever they change
+  // Save owned pixels to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("ownedPixels", JSON.stringify(ownedPixels));
   }, [ownedPixels]);
 
   const togglePixel = (index) => {
-    setOwnedPixels((prev) =>
-      prev.includes(index)
-        ? prev.filter((p) => p !== index)
-        : [...prev, index]
-    );
+    setOwnedPixels((prev) => {
+      const isOwned = prev.includes(index);
+      if (isOwned) {
+        return prev.filter((i) => i !== index); // remove pixel
+      } else {
+        return [...prev, index]; // add pixel
+      }
+    });
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="text-white text-sm mb-2">
-        Owned Pixels: {ownedPixels.length}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+      <h1 className="text-3xl font-bold text-orange-500 mb-2 flex items-center gap-2">
+        AMO Pixel Website ✅
+      </h1>
+
+      {/* Pixel Counter - Top Right */}
+      <div className="fixed top-4 right-4 bg-gray-900 text-green-400 px-3 py-1 rounded-lg shadow-lg text-sm">
+        You own {ownedPixels.length} pixel{ownedPixels.length !== 1 ? "s" : ""}
       </div>
-      <div className="grid grid-cols-10 gap-1">
-        {Array.from({ length: totalPixels }).map((_, i) => (
-          <div
-            key={i}
-            onClick={() => togglePixel(i)}
-            className={`w-6 h-6 border cursor-pointer ${
-              ownedPixels.includes(i) ? "bg-green-500" : "bg-gray-700"
-            }`}
-          ></div>
-        ))}
+
+      {/* Pixel Grid */}
+      <div
+        className="grid mt-8"
+        style={{
+          gridTemplateColumns: `repeat(${gridSize}, 20px)`,
+          gridTemplateRows: `repeat(${gridSize}, 20px)`,
+          gap: "1px",
+        }}
+      >
+        {Array.from({ length: totalPixels }).map((_, index) => {
+          const isOwned = ownedPixels.includes(index);
+          return (
+            <div
+              key={index}
+              onClick={() => togglePixel(index)}
+              className={`w-5 h-5 cursor-pointer border border-gray-700 transition-all duration-200 ${
+                isOwned ? "bg-green-500" : "bg-gray-900 hover:bg-gray-600"
+              }`}
+              title={`Pixel #${index + 1}`} // shows pixel number on hover
+            />
+          );
+        })}
       </div>
     </div>
   );
